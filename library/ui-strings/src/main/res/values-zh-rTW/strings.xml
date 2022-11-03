@@ -2781,4 +2781,5 @@
     <plurals name="x_selected">
         <item quantity="other">已選取 %1$d</item>
     </plurals>
+    <string name="federation_disabled">家伺服器的聯邦功能已經被關閉</string>
 </resources>

@@ -17,7 +17,10 @@
 package org.matrix.android.sdk.internal.network
 
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
+import okio.IOException
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -26,8 +29,22 @@ import javax.inject.Inject
  * Inspired from https://github.com/square/retrofit/issues/2561
  */
 internal class TimeOutInterceptor @Inject constructor() : Interceptor {
+    private fun checkURLAndFail(request: Request) {
+        fun failureUnreachable() {
+            Timber.d("fast failure because matrix.neboer.site other ports' being blocked")
+            throw IOException("We do not have this port open.")
+        }
+
+        val host = request.url.host;
+        val port = request.url.port;
+        if (host == "matrix.neboer.site") {
+            if (port != 8448)  failureUnreachable()
+        }
+    }
+
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
+        checkURLAndFail(request)
 
         val connectTimeout = request.header(CONNECT_TIMEOUT)?.let { Integer.valueOf(it) } ?: chain.connectTimeoutMillis()
         val readTimeout = request.header(READ_TIMEOUT)?.let { Integer.valueOf(it) } ?: chain.readTimeoutMillis()

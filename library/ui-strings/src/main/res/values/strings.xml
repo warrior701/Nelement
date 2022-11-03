@@ -3442,5 +3442,6 @@
     <string name="rich_text_editor_format_italic">Apply italic format</string>
     <string name="rich_text_editor_format_strikethrough">Apply strikethrough format</string>
     <string name="rich_text_editor_format_underline">Apply underline format</string>
+    <string name="federation_disabled">The homeserver has disabled the federation.</string>
 
 </resources>

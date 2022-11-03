@@ -133,7 +133,7 @@ android {
     compileSdk versions.compileSdk
 
     defaultConfig {
-        applicationId "im.vector.app"
+        applicationId 'im.neboer.app'
         // Set to API 21: see #405
         minSdk versions.minSdk
         targetSdk versions.targetSdk
@@ -147,7 +147,7 @@ android {
         versionCode project.getVersionCode()
 
         // Required for sonar analysis
-        versionName "${versionMajor}.${versionMinor}.${versionPatch}-sonar"
+        versionName "Neboer ${versionMajor}.${versionMinor}.${versionPatch}-sonar"
 
         // Generate a random app task affinity
         manifestPlaceholders = [appTaskAffinitySuffix: "H_${gitRevision()}"]
@@ -310,14 +310,14 @@ android {
 
             dimension "store"
             isDefault = true
-            versionName "${versionMajor}.${versionMinor}.${versionPatch}${getGplayVersionSuffix()}"
+            versionName "Neboer ${versionMajor}.${versionMinor}.${versionPatch}${getGplayVersionSuffix()}"
             buildConfigField "String", "SHORT_FLAVOR_DESCRIPTION", "\"G\""
             buildConfigField "String", "FLAVOR_DESCRIPTION", "\"GooglePlay\""
         }
 
         fdroid {
             dimension "store"
-            versionName "${versionMajor}.${versionMinor}.${versionPatch}${getFdroidVersionSuffix()}"
+            versionName "Neboer ${versionMajor}.${versionMinor}.${versionPatch}${getFdroidVersionSuffix()}"
             buildConfigField "String", "SHORT_FLAVOR_DESCRIPTION", "\"F\""
             buildConfigField "String", "FLAVOR_DESCRIPTION", "\"FDroid\""
         }
