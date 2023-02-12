@@ -85,6 +85,12 @@ class OtherSessionsFragment :
             menu.findItem(R.id.otherSessionsSelectAll).isVisible = isSelectModeEnabled
             menu.findItem(R.id.otherSessionsDeselectAll).isVisible = isSelectModeEnabled
             menu.findItem(R.id.otherSessionsSelect).isVisible = !isSelectModeEnabled && state.devices()?.isNotEmpty().orFalse()
+            menu.findItem(R.id.otherSessionsToggleIpAddress).isVisible = !isSelectModeEnabled
+            menu.findItem(R.id.otherSessionsToggleIpAddress).title = if (state.isShowingIpAddress) {
+                getString(R.string.device_manager_other_sessions_hide_ip_address)
+            } else {
+                getString(R.string.device_manager_other_sessions_show_ip_address)
+            }
             updateMultiSignoutMenuItem(menu, state)
         }
     }
@@ -130,8 +136,16 @@ class OtherSessionsFragment :
                 confirmMultiSignout()
                 true
             }
+            R.id.otherSessionsToggleIpAddress -> {
+                toggleIpAddressVisibility()
+                true
+            }
             else -> false
         }
+    }
+
+    private fun toggleIpAddressVisibility() {
+        viewModel.handle(OtherSessionsAction.ToggleIpAddressVisibility)
     }
 
     private fun confirmMultiSignout() {
@@ -168,7 +182,9 @@ class OtherSessionsFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupToolbar(views.otherSessionsToolbar).setTitle(args.titleResourceId).allowBack()
+        setupToolbar(views.otherSessionsToolbar)
+                .setTitle(R.string.device_manager_sessions_other_title)
+                .allowBack()
         observeViewEvents()
         initFilterView()
     }
@@ -211,9 +227,10 @@ class OtherSessionsFragment :
 
     override fun invalidate() = withState(viewModel) { state ->
         updateLoading(state.isLoading)
+        updateFilterView(state.isSelectModeEnabled)
         if (state.devices is Success) {
             val devices = state.devices.invoke()
-            renderDevices(devices, state.currentFilter)
+            renderDevices(devices, state.currentFilter, state.isShowingIpAddress)
             updateToolbar(devices, state.isSelectModeEnabled)
         }
     }
@@ -226,18 +243,22 @@ class OtherSessionsFragment :
         }
     }
 
+    private fun updateFilterView(isSelectModeEnabled: Boolean) {
+        views.otherSessionsFilterFrameLayout.isVisible = isSelectModeEnabled.not()
+    }
+
     private fun updateToolbar(devices: List<DeviceFullInfo>, isSelectModeEnabled: Boolean) {
         invalidateOptionsMenu()
         val title = if (isSelectModeEnabled) {
             val selection = devices.count { it.isSelected }
             stringProvider.getQuantityString(R.plurals.x_selected, selection, selection)
         } else {
-            getString(args.titleResourceId)
+            getString(R.string.device_manager_sessions_other_title)
         }
         toolbar?.title = title
     }
 
-    private fun renderDevices(devices: List<DeviceFullInfo>, currentFilter: DeviceManagerFilterType) {
+    private fun renderDevices(devices: List<DeviceFullInfo>, currentFilter: DeviceManagerFilterType, isShowingIpAddress: Boolean) {
         views.otherSessionsFilterBadgeImageView.isVisible = currentFilter != DeviceManagerFilterType.ALL_SESSIONS
         views.otherSessionsSecurityRecommendationView.isVisible = currentFilter != DeviceManagerFilterType.ALL_SESSIONS
         views.deviceListHeaderOtherSessions.isVisible = currentFilter == DeviceManagerFilterType.ALL_SESSIONS
@@ -299,7 +320,8 @@ class OtherSessionsFragment :
         } else {
             views.deviceListOtherSessions.isVisible = true
             views.otherSessionsNotFoundLayout.isVisible = false
-            views.deviceListOtherSessions.render(devices = devices, totalNumberOfDevices = devices.size, showViewAll = false)
+            val mappedDevices = if (isShowingIpAddress) devices else devices.map { it.copy(deviceInfo = it.deviceInfo.copy(lastSeenIp = null)) }
+            views.deviceListOtherSessions.render(devices = mappedDevices, totalNumberOfDevices = mappedDevices.size, showViewAll = false)
         }
     }
 
@@ -326,6 +348,8 @@ class OtherSessionsFragment :
     override fun onOtherSessionLongClicked(deviceId: String) = withState(viewModel) { state ->
         if (!state.isSelectModeEnabled) {
             enableSelectMode(true, deviceId)
+        } else {
+            viewModel.handle(OtherSessionsAction.ToggleSelectionForDevice(deviceId))
         }
     }
 

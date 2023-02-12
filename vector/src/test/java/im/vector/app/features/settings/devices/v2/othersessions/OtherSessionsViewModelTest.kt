@@ -22,10 +22,12 @@ import com.airbnb.mvrx.test.MavericksTestRule
 import im.vector.app.features.settings.devices.v2.DeviceFullInfo
 import im.vector.app.features.settings.devices.v2.GetDeviceFullInfoListUseCase
 import im.vector.app.features.settings.devices.v2.RefreshDevicesUseCase
+import im.vector.app.features.settings.devices.v2.ToggleIpAddressVisibilityUseCase
 import im.vector.app.features.settings.devices.v2.filter.DeviceManagerFilterType
 import im.vector.app.test.fakes.FakeActiveSessionHolder
 import im.vector.app.test.fakes.FakePendingAuthHandler
 import im.vector.app.test.fakes.FakeSignoutSessionsUseCase
+import im.vector.app.test.fakes.FakeVectorPreferences
 import im.vector.app.test.fakes.FakeVerificationService
 import im.vector.app.test.fixtures.aDeviceFullInfo
 import im.vector.app.test.test
@@ -45,7 +47,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.matrix.android.sdk.api.session.uia.DefaultBaseAuth
 
-private const val A_TITLE_RES_ID = 1
 private const val A_DEVICE_ID_1 = "device-id-1"
 private const val A_DEVICE_ID_2 = "device-id-2"
 private const val A_PASSWORD = "password"
@@ -56,7 +57,6 @@ class OtherSessionsViewModelTest {
     val mavericksTestRule = MavericksTestRule(testDispatcher = testDispatcher)
 
     private val defaultArgs = OtherSessionsArgs(
-            titleResourceId = A_TITLE_RES_ID,
             defaultFilter = DeviceManagerFilterType.ALL_SESSIONS,
             excludeCurrentDevice = false,
     )
@@ -66,6 +66,8 @@ class OtherSessionsViewModelTest {
     private val fakeRefreshDevicesUseCase = mockk<RefreshDevicesUseCase>(relaxed = true)
     private val fakeSignoutSessionsUseCase = FakeSignoutSessionsUseCase()
     private val fakePendingAuthHandler = FakePendingAuthHandler()
+    private val fakeVectorPreferences = FakeVectorPreferences()
+    private val toggleIpAddressVisibilityUseCase = mockk<ToggleIpAddressVisibilityUseCase>()
 
     private fun createViewModel(viewState: OtherSessionsViewState = OtherSessionsViewState(defaultArgs)) =
             OtherSessionsViewModel(
@@ -75,6 +77,8 @@ class OtherSessionsViewModelTest {
                     signoutSessionsUseCase = fakeSignoutSessionsUseCase.instance,
                     pendingAuthHandler = fakePendingAuthHandler.instance,
                     refreshDevicesUseCase = fakeRefreshDevicesUseCase,
+                    vectorPreferences = fakeVectorPreferences.instance,
+                    toggleIpAddressVisibilityUseCase = toggleIpAddressVisibilityUseCase,
             )
 
     @Before
@@ -84,6 +88,7 @@ class OtherSessionsViewModelTest {
         every { SystemClock.elapsedRealtime() } returns 1234
 
         givenVerificationService()
+        fakeVectorPreferences.givenSessionManagerShowIpAddress(false)
     }
 
     private fun givenVerificationService(): FakeVerificationService {

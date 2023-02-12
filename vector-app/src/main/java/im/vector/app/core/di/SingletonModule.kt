@@ -40,14 +40,14 @@ import im.vector.app.core.dispatchers.CoroutineDispatchers
 import im.vector.app.core.error.DefaultErrorFormatter
 import im.vector.app.core.error.ErrorFormatter
 import im.vector.app.core.resources.BuildMeta
-import im.vector.app.core.time.Clock
-import im.vector.app.core.time.DefaultClock
 import im.vector.app.core.utils.AndroidSystemSettingsProvider
 import im.vector.app.core.utils.SystemSettingsProvider
 import im.vector.app.features.analytics.AnalyticsTracker
 import im.vector.app.features.analytics.VectorAnalytics
+import im.vector.app.features.analytics.errors.ErrorTracker
 import im.vector.app.features.analytics.impl.DefaultVectorAnalytics
 import im.vector.app.features.analytics.metrics.VectorPlugins
+import im.vector.app.features.configuration.VectorCustomEventTypesProvider
 import im.vector.app.features.invite.AutoAcceptInvites
 import im.vector.app.features.invite.CompileTimeAutoAcceptInvites
 import im.vector.app.features.navigation.DefaultNavigator
@@ -61,6 +61,8 @@ import im.vector.app.features.settings.VectorPreferences
 import im.vector.app.features.ui.SharedPreferencesUiStateRepository
 import im.vector.app.features.ui.UiStateRepository
 import im.vector.application.BuildConfig
+import im.vector.lib.core.utils.timer.Clock
+import im.vector.lib.core.utils.timer.DefaultClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -68,11 +70,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import org.matrix.android.sdk.api.Matrix
 import org.matrix.android.sdk.api.MatrixConfiguration
+import org.matrix.android.sdk.api.SyncConfig
 import org.matrix.android.sdk.api.auth.AuthenticationService
 import org.matrix.android.sdk.api.auth.HomeServerHistoryService
 import org.matrix.android.sdk.api.legacy.LegacySessionImporter
 import org.matrix.android.sdk.api.raw.RawService
 import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.sync.filter.SyncFilterParams
 import org.matrix.android.sdk.api.settings.LightweightSettingsStorage
 import javax.inject.Singleton
 
@@ -83,6 +87,9 @@ import javax.inject.Singleton
 
     @Binds
     abstract fun bindVectorAnalytics(analytics: DefaultVectorAnalytics): VectorAnalytics
+
+    @Binds
+    abstract fun bindErrorTracker(analytics: DefaultVectorAnalytics): ErrorTracker
 
     @Binds
     abstract fun bindAnalyticsTracker(analytics: DefaultVectorAnalytics): AnalyticsTracker
@@ -98,9 +105,6 @@ import javax.inject.Singleton
 
     @Binds
     abstract fun bindAutoAcceptInvites(autoAcceptInvites: CompileTimeAutoAcceptInvites): AutoAcceptInvites
-
-    @Binds
-    abstract fun bindDefaultClock(clock: DefaultClock): Clock
 
     @Binds
     abstract fun bindEmojiSpanify(emojiCompatWrapper: EmojiCompatWrapper): EmojiSpanify
@@ -141,6 +145,7 @@ import javax.inject.Singleton
             vectorRoomDisplayNameFallbackProvider: VectorRoomDisplayNameFallbackProvider,
             flipperProxy: FlipperProxy,
             vectorPlugins: VectorPlugins,
+            vectorCustomEventTypesProvider: VectorCustomEventTypesProvider,
     ): MatrixConfiguration {
         return MatrixConfiguration(
                 applicationFlavor = BuildConfig.FLAVOR_DESCRIPTION,
@@ -150,6 +155,10 @@ import javax.inject.Singleton
                         flipperProxy.networkInterceptor(),
                 ),
                 metricPlugins = vectorPlugins.plugins(),
+                customEventTypesProvider = vectorCustomEventTypesProvider,
+                syncConfig = SyncConfig(
+                        syncFilterParams = SyncFilterParams(lazyLoadMembersForStateEvents = true, useThreadNotifications = true)
+                )
         )
     }
 
@@ -221,7 +230,6 @@ import javax.inject.Singleton
             gitRevision = BuildConfig.GIT_REVISION,
             gitRevisionDate = BuildConfig.GIT_REVISION_DATE,
             gitBranchName = BuildConfig.GIT_BRANCH_NAME,
-            buildNumber = BuildConfig.BUILD_NUMBER,
             flavorDescription = BuildConfig.FLAVOR_DESCRIPTION,
             flavorShortDescription = BuildConfig.SHORT_FLAVOR_DESCRIPTION,
     )
@@ -232,4 +240,8 @@ import javax.inject.Singleton
     fun providesDefaultSharedPreferences(context: Context): SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
     }
+
+    @Singleton
+    @Provides
+    fun providesDefaultClock(): Clock = DefaultClock()
 }

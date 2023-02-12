@@ -21,23 +21,26 @@ import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.test.MavericksTestRule
 import im.vector.app.core.session.clientinfo.MatrixClientInfoContent
 import im.vector.app.features.settings.devices.v2.details.extended.DeviceExtendedInfo
+import im.vector.app.features.settings.devices.v2.filter.DeviceManagerFilterType
 import im.vector.app.features.settings.devices.v2.list.DeviceType
-import im.vector.app.features.settings.devices.v2.signout.InterceptSignoutFlowResponseUseCase
 import im.vector.app.features.settings.devices.v2.verification.CheckIfCurrentSessionCanBeVerifiedUseCase
 import im.vector.app.features.settings.devices.v2.verification.CurrentSessionCrossSigningInfo
 import im.vector.app.features.settings.devices.v2.verification.GetCurrentSessionCrossSigningInfoUseCase
 import im.vector.app.test.fakes.FakeActiveSessionHolder
 import im.vector.app.test.fakes.FakePendingAuthHandler
 import im.vector.app.test.fakes.FakeSignoutSessionsUseCase
+import im.vector.app.test.fakes.FakeVectorPreferences
 import im.vector.app.test.fakes.FakeVerificationService
 import im.vector.app.test.test
 import im.vector.app.test.testDispatcher
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import io.mockk.verifyAll
@@ -51,6 +54,8 @@ import org.matrix.android.sdk.api.session.crypto.crosssigning.DeviceTrustLevel
 import org.matrix.android.sdk.api.session.crypto.model.CryptoDeviceInfo
 import org.matrix.android.sdk.api.session.crypto.model.DeviceInfo
 import org.matrix.android.sdk.api.session.crypto.model.RoomEncryptionTrustLevel
+import org.matrix.android.sdk.api.session.crypto.verification.VerificationTransaction
+import org.matrix.android.sdk.api.session.crypto.verification.VerificationTxState
 import org.matrix.android.sdk.api.session.uia.DefaultBaseAuth
 
 private const val A_CURRENT_DEVICE_ID = "current-device-id"
@@ -69,9 +74,14 @@ class DevicesViewModelTest {
     private val refreshDevicesOnCryptoDevicesChangeUseCase = mockk<RefreshDevicesOnCryptoDevicesChangeUseCase>(relaxed = true)
     private val checkIfCurrentSessionCanBeVerifiedUseCase = mockk<CheckIfCurrentSessionCanBeVerifiedUseCase>()
     private val fakeSignoutSessionsUseCase = FakeSignoutSessionsUseCase()
-    private val fakeInterceptSignoutFlowResponseUseCase = mockk<InterceptSignoutFlowResponseUseCase>()
     private val fakePendingAuthHandler = FakePendingAuthHandler()
     private val fakeRefreshDevicesUseCase = mockk<RefreshDevicesUseCase>(relaxUnitFun = true)
+    private val fakeVectorPreferences = FakeVectorPreferences()
+    private val toggleIpAddressVisibilityUseCase = mockk<ToggleIpAddressVisibilityUseCase>()
+
+    private val verifiedTransaction = mockk<VerificationTransaction>().apply {
+        every { state } returns VerificationTxState.Verified
+    }
 
     private fun createViewModel(): DevicesViewModel {
         return DevicesViewModel(
@@ -82,9 +92,10 @@ class DevicesViewModelTest {
                 refreshDevicesOnCryptoDevicesChangeUseCase = refreshDevicesOnCryptoDevicesChangeUseCase,
                 checkIfCurrentSessionCanBeVerifiedUseCase = checkIfCurrentSessionCanBeVerifiedUseCase,
                 signoutSessionsUseCase = fakeSignoutSessionsUseCase.instance,
-                interceptSignoutFlowResponseUseCase = fakeInterceptSignoutFlowResponseUseCase,
                 pendingAuthHandler = fakePendingAuthHandler.instance,
                 refreshDevicesUseCase = fakeRefreshDevicesUseCase,
+                vectorPreferences = fakeVectorPreferences.instance,
+                toggleIpAddressVisibilityUseCase = toggleIpAddressVisibilityUseCase,
         )
     }
 
@@ -97,6 +108,7 @@ class DevicesViewModelTest {
         givenVerificationService()
         givenCurrentSessionCrossSigningInfo()
         givenDeviceFullInfoList(deviceId1 = A_DEVICE_ID_1, deviceId2 = A_DEVICE_ID_2)
+        fakeVectorPreferences.givenSessionManagerShowIpAddress(false)
     }
 
     private fun givenVerificationService(): FakeVerificationService {
@@ -165,10 +177,7 @@ class DevicesViewModelTest {
         val viewModelTest = createViewModel().test()
 
         // Then
-        viewModelTest.assertLatestState {
-            it.devices is Success && it.devices.invoke() == deviceFullInfoList &&
-                    it.inactiveSessionsCount == 1 && it.unverifiedSessionsCount == 1
-        }
+        viewModelTest.assertLatestState { it.devices is Success && it.devices.invoke() == deviceFullInfoList }
         viewModelTest.finish()
     }
 
@@ -343,6 +352,45 @@ class DevicesViewModelTest {
         }
     }
 
+    @Test
+    fun `given the viewModel when initializing it then view state of ip address visibility is false`() {
+        // When
+        val viewModelTest = createViewModel().test()
+
+        // Then
+        viewModelTest.assertLatestState { it.isShowingIpAddress == false }
+        viewModelTest.finish()
+    }
+
+    @Test
+    fun `given the viewModel when toggleIpAddressVisibility action is triggered then view state and preference change accordingly`() {
+        // When
+        val viewModel = createViewModel()
+        val viewModelTest = viewModel.test()
+        every { toggleIpAddressVisibilityUseCase.execute() } just runs
+        every { fakeVectorPreferences.instance.setIpAddressVisibilityInDeviceManagerScreens(true) } just runs
+        every { fakeVectorPreferences.instance.showIpAddressInSessionManagerScreens() } returns true
+
+        viewModel.handle(DevicesAction.ToggleIpAddressVisibility)
+        viewModel.onSharedPreferenceChanged(null, null)
+
+        // Then
+        viewModelTest.assertLatestState { it.isShowingIpAddress == true }
+        viewModelTest.finish()
+    }
+
+    @Test
+    fun `given the view model when a verified transaction is updated then device list is refreshed`() {
+        // Given
+        val viewModel = createViewModel()
+
+        // When
+        viewModel.transactionUpdated(verifiedTransaction)
+
+        // Then
+        verify { viewModel.refreshDeviceList() }
+    }
+
     private fun givenCurrentSessionCrossSigningInfo(): CurrentSessionCrossSigningInfo {
         val currentSessionCrossSigningInfo = mockk<CurrentSessionCrossSigningInfo>()
         every { currentSessionCrossSigningInfo.deviceId } returns A_CURRENT_DEVICE_ID
@@ -353,7 +401,7 @@ class DevicesViewModelTest {
     /**
      * Generate mocked deviceFullInfo list with 1 unverified and inactive + 1 verified and active.
      */
-    private fun givenDeviceFullInfoList(deviceId1: String, deviceId2: String): List<DeviceFullInfo> {
+    private fun givenDeviceFullInfoList(deviceId1: String, deviceId2: String): DeviceFullInfoList {
         val verifiedCryptoDeviceInfo = mockk<CryptoDeviceInfo>()
         every { verifiedCryptoDeviceInfo.trustLevel } returns DeviceTrustLevel(crossSigningVerified = true, locallyVerified = true)
         val unverifiedCryptoDeviceInfo = mockk<CryptoDeviceInfo>()
@@ -382,10 +430,15 @@ class DevicesViewModelTest {
                 deviceExtendedInfo = DeviceExtendedInfo(DeviceType.MOBILE),
                 matrixClientInfo = MatrixClientInfoContent(),
         )
-        val deviceFullInfoList = listOf(deviceFullInfo1, deviceFullInfo2)
-        val deviceFullInfoListFlow = flowOf(deviceFullInfoList)
-        every { getDeviceFullInfoListUseCase.execute(any(), any()) } returns deviceFullInfoListFlow
-        return deviceFullInfoList
+        val devices = listOf(deviceFullInfo1, deviceFullInfo2)
+        every { getDeviceFullInfoListUseCase.execute(DeviceManagerFilterType.ALL_SESSIONS, any()) } returns flowOf(devices)
+        every { getDeviceFullInfoListUseCase.execute(DeviceManagerFilterType.UNVERIFIED, any()) } returns flowOf(listOf(deviceFullInfo2))
+        every { getDeviceFullInfoListUseCase.execute(DeviceManagerFilterType.INACTIVE, any()) } returns flowOf(listOf(deviceFullInfo1))
+        return DeviceFullInfoList(
+                allSessions = devices,
+                unverifiedSessionsCount = 1,
+                inactiveSessionsCount = 1,
+        )
     }
 
     private fun givenInitialViewState(deviceId1: String, deviceId2: String): DevicesViewState {
@@ -394,8 +447,6 @@ class DevicesViewModelTest {
         return DevicesViewState(
                 currentSessionCrossSigningInfo = currentSessionCrossSigningInfo,
                 devices = Success(deviceFullInfoList),
-                unverifiedSessionsCount = 1,
-                inactiveSessionsCount = 1,
                 isLoading = false,
         )
     }

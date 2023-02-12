@@ -15,14 +15,15 @@
  */
 package im.vector.app.features.home.room.detail.timeline.factory
 
+import im.vector.app.core.error.ErrorFormatter
 import im.vector.app.core.resources.ColorProvider
 import im.vector.app.core.resources.DrawableProvider
-import im.vector.app.features.displayname.getBestName
 import im.vector.app.features.home.room.detail.timeline.helper.AudioMessagePlaybackTracker
 import im.vector.app.features.home.room.detail.timeline.helper.AvatarSizeProvider
 import im.vector.app.features.home.room.detail.timeline.helper.VoiceBroadcastEventsGroup
 import im.vector.app.features.home.room.detail.timeline.item.AbsMessageItem
 import im.vector.app.features.home.room.detail.timeline.item.AbsMessageVoiceBroadcastItem
+import im.vector.app.features.home.room.detail.timeline.item.BaseEventItem
 import im.vector.app.features.home.room.detail.timeline.item.MessageVoiceBroadcastListeningItem
 import im.vector.app.features.home.room.detail.timeline.item.MessageVoiceBroadcastListeningItem_
 import im.vector.app.features.home.room.detail.timeline.item.MessageVoiceBroadcastRecordingItem
@@ -35,7 +36,6 @@ import im.vector.app.features.voicebroadcast.model.asVoiceBroadcastEvent
 import im.vector.app.features.voicebroadcast.recording.VoiceBroadcastRecorder
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.getRoom
-import org.matrix.android.sdk.api.session.getUserOrDefault
 import org.matrix.android.sdk.api.util.toMatrixItem
 import javax.inject.Inject
 
@@ -44,9 +44,11 @@ class VoiceBroadcastItemFactory @Inject constructor(
         private val avatarSizeProvider: AvatarSizeProvider,
         private val colorProvider: ColorProvider,
         private val drawableProvider: DrawableProvider,
+        private val errorFormatter: ErrorFormatter,
         private val voiceBroadcastRecorder: VoiceBroadcastRecorder?,
         private val voiceBroadcastPlayer: VoiceBroadcastPlayer,
         private val playbackTracker: AudioMessagePlaybackTracker,
+        private val noticeItemFactory: NoticeItemFactory,
 ) {
 
     fun create(
@@ -54,9 +56,11 @@ class VoiceBroadcastItemFactory @Inject constructor(
             messageContent: MessageVoiceBroadcastInfoContent,
             highlight: Boolean,
             attributes: AbsMessageItem.Attributes,
-    ): AbsMessageVoiceBroadcastItem<*>? {
+    ): BaseEventItem<*>? {
         // Only display item of the initial event with updated data
-        if (messageContent.voiceBroadcastState != VoiceBroadcastState.STARTED) return null
+        if (messageContent.voiceBroadcastState != VoiceBroadcastState.STARTED) {
+            return noticeItemFactory.create(params)
+        }
 
         val voiceBroadcastEventsGroup = params.eventsGroup?.let { VoiceBroadcastEventsGroup(it) } ?: return null
         val voiceBroadcastEvent = voiceBroadcastEventsGroup.getLastDisplayableEvent().root.asVoiceBroadcastEvent() ?: return null
@@ -71,13 +75,15 @@ class VoiceBroadcastItemFactory @Inject constructor(
                 voiceBroadcast = voiceBroadcast,
                 voiceBroadcastState = voiceBroadcastContent.voiceBroadcastState,
                 duration = voiceBroadcastEventsGroup.getDuration(),
-                recorderName = params.event.root.stateKey?.let { session.getUserOrDefault(it) }?.toMatrixItem()?.getBestName().orEmpty(),
+                hasUnableToDecryptEvent = voiceBroadcastEventsGroup.hasUnableToDecryptEvent(),
+                recorderName = params.event.senderInfo.disambiguatedDisplayName,
                 recorder = voiceBroadcastRecorder,
                 player = voiceBroadcastPlayer,
                 playbackTracker = playbackTracker,
                 roomItem = session.getRoom(params.event.roomId)?.roomSummary()?.toMatrixItem(),
                 colorProvider = colorProvider,
                 drawableProvider = drawableProvider,
+                errorFormatter = errorFormatter,
         )
 
         return if (isRecording) {
