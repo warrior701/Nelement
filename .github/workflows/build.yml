@@ -14,9 +14,6 @@ jobs:
   release:
     name: Build release APKs (Fdroid)
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main'
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
