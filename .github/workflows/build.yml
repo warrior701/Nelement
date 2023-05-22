@@ -25,7 +25,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Assemble Fdroid release apk
-        run: ./gradlew :vector-app:assembleFdroidRelease $CI_GRADLE_ARG_PROPERTIES
+        run: ./gradlew :vector-app:assembleFdroidRustCryptoRelease $CI_GRADLE_ARG_PROPERTIES
       - name: Upload Fdroid release APKs
         uses: actions/upload-artifact@v3
         with:
