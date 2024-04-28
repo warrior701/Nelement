@@ -1,34 +1,33 @@
 {
   "project_info": {
-    "project_number": "912726360885",
-    "firebase_url": "https://vector-alpha.firebaseio.com",
-    "project_id": "vector-alpha",
-    "storage_bucket": "vector-alpha.appspot.com"
+    "project_number": "302845501329",
+    "project_id": "nelement-bdbd2",
+    "storage_bucket": "nelement-bdbd2.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:912726360885:android:4ef8f3a0021e774d",
+        "mobilesdk_app_id": "1:302845501329:android:6bfa00a3ae0743094cc430",
         "android_client_info": {
-          "package_name": "im.neboer.app.debug"
+          "package_name": "im.neboer.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "912726360885-e87n3jva9uoj4vbidvijq78ebg02asv2.apps.googleusercontent.com",
+          "client_id": "302845501329-nq58o82d39bis0ts345rve8vkotc1jol.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAFZX8IhIfgzdOZvxDP_ISO5WYoU7jmQ5c"
+          "current_key": "AIzaSyCShbRHJfSapj-zTmVEeebh-OBXPDy98s4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "912726360885-rsae0i66rgqt6ivnudu1pv4tksg9i8b2.apps.googleusercontent.com",
+              "client_id": "302845501329-nq58o82d39bis0ts345rve8vkotc1jol.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
