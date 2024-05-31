@@ -7,7 +7,7 @@
     <string name="matrix_org_server_url" translatable="false">https://chat.neboer.site</string>
 
     <!-- Rageshake configuration -->
-    <string name="bug_report_url" translatable="false">https://riot.im/bugreports/submit</string>
+    <string name="bug_report_url" translatable="false">https://rageshake.neboer.site/bugreports/submit</string>
     <string name="bug_report_app_name" translatable="false">Nelement</string>
     <string name="bug_report_auto_uisi_app_name" translatable="false">element-auto-uisi</string>
 

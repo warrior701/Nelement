@@ -17,9 +17,9 @@
 package im.vector.app.features.settings
 
 object VectorSettingsUrls {
-    const val HELP = "https://element.io/help"
+    const val HELP = "https://www.neboer.site/nerchat"
     const val COPYRIGHT = "https://element.io/copyright"
-    const val ACCEPTABLE_USE_POLICY = "https://element.io/acceptable-use-policy-terms"
-    const val PRIVACY_POLICY = "https://element.io/privacy"
+    const val ACCEPTABLE_USE_POLICY = "https://www.neboer.site/nerchat/docs/help/terms_of_usage.html"
+    const val PRIVACY_POLICY = "https://www.neboer.site/nerchat/docs/help/privacy_policy.html"
     const val THIRD_PARTY_LICENSES = "file:///android_asset/open_source_licenses.html"
 }
