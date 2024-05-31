@@ -4,6 +4,39 @@ Nelement是一个Element Android的fork，旨在通过NerChat!为中国大陆用
 
 欢迎访问[NerChat!文档](https://www.neboer.site/nerchat/)
 
+## Nelement对Element Android的修改
+
+Nelement主要修改了Element Android的四处代码：
+
+1. Nelement修改了Element Android的家服务器配置文件，修改默认服务器、bug报告包名等信息。
+
+   参考这个[commit](https://github.com/Neboer/Nelement/commit/30857e2f)的这个[文件修改](https://github.com/Neboer/Nelement/commit/30857e2f#diff-5db79790a9dbb104c9d1687b291b21b55bc9ae1736d6a83251e1de6a012911bf)。
+
+
+2. Nelement修改了Element Android的图标、包名和应用名，与原版软件做出了重要区分，并且可以和原软件共存。
+
+   对图标和应用名的修改请参考同一个[commit](https://github.com/Neboer/Nelement/commit/30857e2f)（与上一个相同）的其余所有修改。
+
+   对包名的修改请参考这个[commit](https://github.com/Neboer/Nelement/commit/b5a5a4e8)中的这个[文件修改](https://github.com/Neboer/Nelement/commit/b5a5a4e8#diff-7d90e090118cb3b19ed7934b93c3b7ce8235f64f4fe186d2ea3f83fee00bf03e)
+
+
+3. Nelement修改了Element Android的构建流程，直接构建Fdroid版本，而不再编译Google Play的预编译版本，因为Nelement不会发布到Google Play商店，同时也避免了无Google Play框架的国产手机在使用中出现问题。
+
+   这个修改主要发生在这个[commit](https://github.com/Neboer/Nelement/commit/afc7636f)，这里删除了Element Android中不必要的测试/发布等CI过程，只保留Fdroid Release版本的构建代码。
+
+
+4. Nelement修改了Element Android中配置的默认jitsi会议服务器地址为我们在国内搭建的jitsi服务，让用户可以享受高品质、低延迟的语音通话体验。
+
+   参考这个[commit](https://github.com/Neboer/Nelement/commit/5efdb741)。
+
+5. （最新更新）Nelement支持了我们自建的Unified Push Gateway和基于FCM的通知服务器！现在，无论你的手机是否支持Google服务框架，你都可以获得很好的即时通知体验了！
+
+   在这个[commit](https://github.com/Neboer/Nelement/commit/30aec3492b13e7ae3272ae13abd2f37b1e2e6f2b)中，我们支持了FCM。
+
+   在这个[commit](https://github.com/Neboer/Nelement/commit/ac9042fb027ba0218b352764e1cbc48ca5763cec)中，我们支持了Unified Push。
+
+我们还对Nelement做了一些其他的适配性小修改，比如修改google-services.json中的包名、修改manifest文件中注册的，以及使用Neboer自己的密钥对Nelement进行签名、修改Element的版本号等等。
+
 以下是原README文件内容。
 
 [![Latest build](https://github.com/element-hq/element-android/actions/workflows/build.yml/badge.svg?query=branch%3Adevelop)](https://github.com/element-hq/element-android/actions/workflows/build.yml?query=branch%3Adevelop)

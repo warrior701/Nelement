@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: burrunan/gradle-cache-action@v1
-        name: Build Fdroid Release
+        name: Configure Fdroid Build Cache
       - name: Assemble Fdroid release apk
         run: ./gradlew assembleFdroidRelease $CI_GRADLE_ARG_PROPERTIES
       - name: Upload Fdroid release APKs
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: burrunan/gradle-cache-action@v1
-        name: Build GPlay Release
+        name: Configure GPlay Build Cache
       - name: Assemble GPlay unsigned apk
         run: ./gradlew clean assembleGplayRelease $CI_GRADLE_ARG_PROPERTIES
       - name: Upload Gplay unsigned APKs
