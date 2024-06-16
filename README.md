@@ -24,12 +24,14 @@ Nelement主要修改了Element Android的四处代码：
 
    这个修改主要发生在这个[commit](https://github.com/Neboer/Nelement/commit/afc7636f)，这里删除了Element Android中不必要的测试/发布等CI过程，只保留Fdroid Release版本的构建代码。
 
+   后来我们又在[这个提交](https://github.com/Neboer/Nelement/commit/991ef67676a6347f1023c9e1b789b375356083b9)中将Google Play构建添加了回来，因为我们需要对FCM提供的支持。
 
-4. Nelement修改了Element Android中配置的默认jitsi会议服务器地址为我们在国内搭建的jitsi服务，让用户可以享受高品质、低延迟的语音通话体验。
+
+5. Nelement修改了Element Android中配置的默认jitsi会议服务器地址为我们在国内搭建的jitsi服务，让用户可以享受高品质、低延迟的语音通话体验。
 
    参考这个[commit](https://github.com/Neboer/Nelement/commit/5efdb741)。
 
-5. （最新更新）Nelement支持了我们自建的Unified Push Gateway和基于FCM的通知服务器！现在，无论你的手机是否支持Google服务框架，你都可以获得很好的即时通知体验了！
+6. （最新更新）Nelement支持了我们自建的Unified Push Gateway和基于FCM的通知服务器！现在，无论你的手机是否支持Google服务框架，你都可以获得很好的即时通知体验了！
 
    在这个[commit](https://github.com/Neboer/Nelement/commit/30aec3492b13e7ae3272ae13abd2f37b1e2e6f2b)中，我们支持了FCM。
 
