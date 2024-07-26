@@ -65,7 +65,7 @@ class HomeserverSettingsController @Inject constructor(
             is Fail ->
                 errorWithRetryItem {
                     id("error")
-                    text(host.stringProvider.getString(R.string.federation_disabled))
+                    text(host.stringProvider.getString(CommonStrings.federation_disabled))
                     listener { host.callback?.retry() }
                 }
             is Success ->
