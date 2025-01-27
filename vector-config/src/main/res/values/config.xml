@@ -4,7 +4,7 @@
     <!-- "app_name" is now defined in build.gradle -->
 
     <!-- server urls -->
-    <string name="matrix_org_server_url" translatable="false">https://chat.neboer.site</string>
+    <string name="matrix_org_server_url" translatable="false">https://matrix.cacheskys.com</string>
 
     <!-- Rageshake configuration -->
     <string name="bug_report_url" translatable="false">https://rageshake.neboer.site/bugreports/submit</string>
